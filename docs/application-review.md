@@ -2,7 +2,7 @@
 
 **Date:** 2024-11-02  
 **Status:** Completed  
-**Last Updated:** 2024-11-02
+**Last Updated:** 2024-11-02 (Updated with latest features)
 
 ## Executive Summary
 
@@ -18,9 +18,11 @@ This document provides a comprehensive review of the Mini To-Do App's applicatio
 - **Create Tasks**: Full task creation with title, description, priority, category, due date, and subtasks
 - **Edit Tasks**: In-place editing via dialog modal
 - **Delete Tasks**: Single task deletion with optimistic UI updates
+- **Bulk Operations**: Select multiple tasks for bulk delete and bulk complete operations
 - **Task Status**: Three-state workflow (todo, in_progress, done)
 - **Task Completion**: Toggle completion status independent of workflow status
 - **Subtasks**: Nested task breakdown with individual completion tracking
+- **Reminders**: Set reminders for tasks with due dates (10min, 1h, 1d before, or custom time)
 - **Task Properties**:
   - Priority levels: low, normal, high
   - Due dates with date picker
@@ -39,7 +41,7 @@ This document provides a comprehensive review of the Mini To-Do App's applicatio
 
 #### Task Filtering & Search
 - **Status Filtering**: Filter by todo, in_progress, done, or all
-- **Text Search**: Real-time search across task titles
+- **Text Search**: Real-time search across task titles and descriptions
 - **Category Filtering**: Sidebar-based category selection
 - **Combined Filters**: Multiple filters work together (category + status + search)
 
@@ -57,22 +59,26 @@ This document provides a comprehensive review of the Mini To-Do App's applicatio
 - **Dedicated Pomodoro Tab**: Separate view within main interface
 
 #### UI/UX Features
-- **Dark Mode**: Manual toggle (not persisted)
+- **Dark Mode**: Manual toggle with localStorage persistence
 - **Responsive Design**: Mobile-friendly layout
 - **Keyboard Shortcuts**: Help modal with shortcuts documentation
 - **Empty States**: User-friendly empty state components
 - **Loading States**: Skeleton screens during data fetching
 - **Theme Support**: Tailwind CSS with dark mode classes
+- **Toast Notifications**: User feedback via Sonner toast library
+- **Error Handling**: Comprehensive error handling with user-friendly messages
 
 ### 1.2 Page Structure
 
 #### Main Pages
 1. **Home Page** (`/`): 
    - Sidebar navigation
+   - QuickView dashboard with task statistics
    - Task list view with filtering
    - Tabs for Tasks/Pomodoro/Analytics
    - Floating action button for new tasks
    - Edit task dialog
+   - Toast notifications for user feedback
 
 2. **New Task Page** (`/new`):
    - Full-page task creation form
@@ -95,14 +101,16 @@ This document provides a comprehensive review of the Mini To-Do App's applicatio
 #### Feature Components
 - `TaskListView`: Main task display with search and filters using `useTaskFilters` hook
 - `TaskList`: Task rendering with grouping (`components/tasks/task-list.tsx`)
-- `TaskItem`: Individual task card with actions
-- `TaskForm`: Reusable form for create/edit with React Hook Form
+- `TaskItem`: Individual task card with actions and bulk selection checkbox
+- `TaskForm`: Reusable form for create/edit with React Hook Form and reminder management
 - `CategoryManager`: Category CRUD interface
 - `PomodoroTimer`: Timer component
 - `AnalyticsPanel`: Statistics and charts with Recharts integration
 - `TaskFilters`: Filter component for status, priority, category, and search
 - `QuickView`: Dashboard-style quick overview cards (overdue, today, tomorrow, this week, done today)
 - `KeyboardShortcuts`: Help modal with keyboard shortcuts documentation
+- `ReminderManager`: Component for managing task reminders (10min, 1h, 1d before, or custom)
+- `BulkActionsBar`: Toolbar for bulk operations (select all, delete, mark complete)
 
 #### Shared Components
 - `EmptyState`: Empty state messaging with icon and description
@@ -121,6 +129,7 @@ This document provides a comprehensive review of the Mini To-Do App's applicatio
 - `Dialog`: Modal dialogs for forms and editing
 - `Card`: Container component with border and background
 - `Tabs`: Tabbed interface components
+- `Checkbox`: Checkbox component for bulk selection
 - All components are theme-aware with dark mode support
 
 ---
@@ -141,7 +150,7 @@ const reminderStore: Map<string, Reminder> = new Map()
 - **Ephemeral**: Data lost on server restart
 - **Single Process**: No persistence across deployments
 - **No Multi-User**: All users share the same data store
-- **No Validation**: Server actions lack input validation
+- **Input Validation**: Zod schemas validate all server action inputs
 - **Demo Data**: Auto-initializes with sample tasks/categories
 
 #### Data Initialization
@@ -155,28 +164,29 @@ const reminderStore: Map<string, Reminder> = new Map()
 All data operations use Next.js Server Actions (`"use server"`):
 
 #### Task Operations
-- `getTasks()`: Fetch all tasks (initializes defaults if empty)
-- `createTask()`: Create new task (generates ID with timestamp)
-- `updateTask()`: Update existing task (returns null if not found)
-- `deleteTask()`: Delete task (returns boolean success)
-- `bulkUpdateTasks()`: Batch updates (returns array of updated tasks, unused in UI)
+- `getTasks()`: Fetch all tasks (initializes defaults if empty, with error handling)
+- `createTask()`: Create new task with Zod validation (generates ID with timestamp)
+- `updateTask()`: Update existing task with Zod validation (returns null if not found)
+- `deleteTask()`: Delete task with ID validation (returns boolean success)
+- `bulkUpdateTasks()`: ✅ Batch updates (returns array of updated tasks, now used in UI for bulk operations)
 
 #### Subtask Operations
-- `addSubtask()`: Add subtask to task
-- `updateSubtask()`: Update subtask title
-- `deleteSubtask()`: Remove subtask
-- `toggleSubtask()`: Toggle completion
+- `addSubtask()`: Add subtask to task with Zod validation
+- `updateSubtask()`: Update subtask title with Zod validation
+- `deleteSubtask()`: Remove subtask with Zod validation
+- `toggleSubtask()`: Toggle completion with Zod validation
 
 #### Category Operations
-- `getCategories()`: Fetch all categories
-- `createCategory()`: Create new category
-- `updateCategory()`: Update category
-- `deleteCategory()`: Delete category
+- `getCategories()`: Fetch all categories (with error handling)
+- `createCategory()`: Create new category with Zod validation
+- `updateCategory()`: Update category with Zod validation
+- `deleteCategory()`: Delete category with ID validation
 
 #### Reminder Operations
-- `createReminder()`: Create reminder (defined but unused in UI)
-- `deleteReminder()`: Delete reminder (defined but unused in UI)
-- Reminder store exists but no UI integration implemented
+- `getReminders()`: Fetch reminders (optionally filtered by taskId)
+- `createReminder()`: Create reminder with Zod validation
+- `deleteReminder()`: Delete reminder with ID validation
+- ✅ Reminder UI integrated into TaskForm component
 
 ### 2.3 Data Flow Patterns
 
@@ -293,12 +303,12 @@ UI updates immediately (optimistic update)
 ### 2.5 Data Flow Issues
 
 #### Problem Areas:
-1. **No Persistence**: Data lost on server restart
-2. **No Validation**: Server actions accept invalid data
+1. **No Persistence**: Data lost on server restart (in-memory storage)
+2. **Validation**: ✅ Zod schemas implemented for all server actions
 3. **Race Conditions**: Concurrent updates could conflict
-4. **No Error Handling**: Failed operations don't surface errors
+4. **Error Handling**: ✅ Comprehensive error handling with toast notifications
 5. **Stale Data**: No automatic refresh mechanism
-6. **No Loading States**: Some operations lack loading indicators
+6. **Loading States**: Some operations lack loading indicators
 
 ---
 
@@ -344,6 +354,7 @@ const [isLoading, setIsLoading] = useState(true)
    - Manages search query and status filter
    - Computes filtered results with `useMemo`
    - Returns derived state (statusGroups, tabStats)
+   - ✅ Search now includes task descriptions, not just titles
 
 2. **`useSearch`**: Generic search hook
    ```typescript
@@ -359,7 +370,7 @@ const [isLoading, setIsLoading] = useState(true)
    const { favorites, toggleFavorite, isFavorite } = useFavorites()
    ```
    - Manages favorite IDs array in component state
-   - No persistence (lost on refresh, not using localStorage)
+   - ✅ Persisted in localStorage (survives page refresh)
    - Used in Sidebar component for favorite categories
    - Toggle function adds/removes IDs from array
 
@@ -369,7 +380,24 @@ const [isLoading, setIsLoading] = useState(true)
    ```
    - Manages which sections are expanded (object with boolean values)
    - Used in Sidebar for collapsible sections (categories, insights)
-   - No persistence (state resets on unmount)
+   - ✅ Persisted in localStorage (survives page refresh)
+
+5. **`useBulkSelection`**: Bulk selection management
+   ```typescript
+   const { selectedIds, selectedCount, toggleSelection, selectAll, clearSelection, isSelected } = useBulkSelection()
+   ```
+   - Manages selected task IDs for bulk operations
+   - Provides toggle, select all, and clear functions
+   - Used in TaskListView for bulk delete and bulk complete operations
+
+6. **`useAsyncOperation`**: Consistent async operation handling
+   ```typescript
+   const { execute, isLoading, error } = useAsyncOperation(operation, { onSuccess, onError })
+   ```
+   - Manages loading state and error handling for async operations
+   - Provides execute function wrapper with automatic loading/error management
+   - Can be used for consistent async patterns across components
+   - Currently available but not yet integrated into all components
 
 #### Pattern 3: Server State Management
 **Approach**: Server Actions + Client State
@@ -505,10 +533,10 @@ useEffect(() => {
    - Categories fetched multiple times
    - No shared state between routes
 
-2. **No State Persistence**
-   - Dark mode preference not saved
-   - Favorites lost on refresh
-   - Expanded sections reset on navigation
+2. **State Persistence** ✅ **IMPROVED**
+   - ✅ Dark mode preference saved in localStorage
+   - ✅ Favorites persisted in localStorage
+   - ✅ Expanded sections persisted in localStorage
 
 3. **Prop Drilling**
    - Deep prop passing (tasks → TaskListView → TaskList → TaskItem)
@@ -519,15 +547,17 @@ useEffect(() => {
    - Some updates optimistic, others require refresh
    - No rollback on failure
 
-5. **No Loading State Management**
-   - Inconsistent loading indicators
-   - Some operations lack loading states
-   - No error state management
+5. **No Loading State Management** ✅ **IMPROVED**
+   - ✅ Consistent loading indicators added to all async operations
+   - ✅ Loading states for task updates, deletions, and bulk operations
+   - ✅ Loading spinners and disabled states during operations
+   - ✅ Optimistic updates with rollback on error
 
-6. **No Error Handling**
-   - Failed server actions don't show errors
-   - No error boundaries
-   - No retry mechanisms
+6. **Error Handling** ✅ **IMPROVED**
+   - ✅ Failed server actions show errors via toast notifications
+   - ✅ Error boundaries implemented for graceful error display
+   - ✅ Rollback mechanism for optimistic updates
+   - ⚠️ No retry mechanisms (still recommended)
 
 7. **State Synchronization**
    - Manual refresh required in some cases
@@ -537,16 +567,16 @@ useEffect(() => {
 ### 3.5 Recommended Improvements
 
 #### Short-term:
-1. **Add Error Handling**: Wrap server actions in try-catch, show toast notifications
-2. **Add Loading States**: Consistent loading indicators for all async operations
-3. **Persist UI Preferences**: Use localStorage for dark mode, favorites, expanded sections
-4. **Add Optimistic Updates**: Consistent pattern for all mutations
+1. ✅ **Add Error Handling**: ✅ COMPLETED - Wrapped server actions in try-catch, implemented toast notifications
+2. ✅ **Add Loading States**: ✅ COMPLETED - Consistent loading indicators for all async operations, optimistic updates with rollback
+3. ✅ **Persist UI Preferences**: ✅ COMPLETED - localStorage for dark mode, favorites, expanded sections
+4. ✅ **Add Optimistic Updates**: ✅ COMPLETED - Consistent pattern for all mutations with rollback on error
 
 #### Medium-term:
 1. **React Query / SWR**: Replace manual useEffect fetching with data fetching library
 2. **Context API**: Share categories and tasks across routes
-3. **Error Boundaries**: Catch and display errors gracefully
-4. **Validation**: Add Zod schemas for server action inputs
+3. ✅ **Error Boundaries**: ✅ COMPLETED - ErrorBoundary component implemented, catches and displays errors gracefully
+4. ✅ **Validation**: ✅ COMPLETED - Zod schemas implemented for all server action inputs
 
 #### Long-term:
 1. **State Management Library**: Consider Zustand or Jotai for global state
@@ -636,7 +666,7 @@ interface Subtask {
 }
 ```
 
-### 5.4 Reminder Model (Unused)
+### 5.4 Reminder Model
 ```typescript
 interface Reminder {
   id: string
@@ -646,6 +676,8 @@ interface Reminder {
   createdAt: string
 }
 ```
+✅ Reminder UI integrated into TaskForm component
+✅ Reminder operations with Zod validation
 
 ---
 
@@ -653,39 +685,42 @@ interface Reminder {
 
 ### Strengths
 ✅ Clean component architecture with clear separation  
-✅ Reusable custom hooks (useTaskFilters, useSearch, useFavorites, useExpandedSections)  
+✅ Reusable custom hooks (useTaskFilters, useSearch, useFavorites, useExpandedSections, useBulkSelection, useAsyncOperation)  
 ✅ Type-safe with TypeScript throughout  
 ✅ Server Actions pattern for mutations  
-✅ Optimistic updates for better UX  
+✅ Optimistic updates for better UX (with rollback on error)  
 ✅ Good separation of concerns  
 ✅ Comprehensive test coverage (hooks, components, server actions)  
 ✅ Modern UI with Radix UI primitives  
 ✅ Dark mode support with Tailwind CSS  
 ✅ Responsive design patterns  
+✅ Consistent loading states across all operations  
+✅ Error boundaries for graceful error handling  
 
 ### Weaknesses
-❌ No data persistence  
-❌ No input validation  
-❌ No error handling  
+❌ No data persistence (in-memory only)  
+✅ Input validation (Zod schemas implemented)  
+✅ Error handling (try-catch + toast notifications + error boundaries)  
 ❌ No global state management  
-❌ Inconsistent loading states  
-❌ Manual refresh required  
+✅ Consistent loading states (implemented across all operations)  
+✅ Optimistic updates (with rollback on error)  
 ❌ No real-time updates  
-❌ State lost on refresh (UI preferences)  
+✅ State persistence (UI preferences saved in localStorage)  
 
 ### Recommendations Priority
 
 **High Priority:**
 1. Add data persistence (database)
-2. Add input validation (Zod schemas)
-3. Add error handling (try-catch + UI feedback)
-4. Persist UI preferences (localStorage)
+2. ✅ Add input validation (Zod schemas) - **COMPLETED**
+3. ✅ Add error handling (try-catch + UI feedback + error boundaries) - **COMPLETED**
+4. ✅ Persist UI preferences (localStorage) - **COMPLETED**
+5. ✅ Add loading states (consistent indicators + optimistic updates) - **COMPLETED**
 
 **Medium Priority:**
 5. Add React Query for data fetching
 6. Add Context API for shared state
-7. Add error boundaries
-8. Consistent loading states
+7. ✅ Add error boundaries - **COMPLETED**
+8. ✅ Consistent loading states - **COMPLETED**
 
 **Low Priority:**
 9. Consider state management library
@@ -768,7 +803,7 @@ interface Reminder {
 - **date-fns**: Date manipulation
 - **next-themes**: Theme management (not actively used)
 - **@vercel/analytics**: Analytics tracking
-- **sonner**: Toast notifications (available but not used)
+- **sonner**: ✅ Toast notifications (implemented and actively used)
 
 ---
 
@@ -777,28 +812,92 @@ interface Reminder {
 ```
 components/
 ├── analytics-panel.tsx       # Analytics dashboard with charts
-├── category-manager.tsx       # Category CRUD dialog
-├── keyboard-shortcuts.tsx     # Keyboard shortcuts help modal
-├── pomodoro-timer.tsx         # Pomodoro timer component
-├── quick-view.tsx             # Dashboard quick stats cards
-├── sidebar.tsx                # Main sidebar navigation
-├── task-filters.tsx           # Filter component (status, priority, category)
-├── task-form.tsx              # Task creation/edit form
-├── task-item.tsx              # Individual task card
-├── task-list-view.tsx         # Main task list container
-├── theme-provider.tsx         # Theme context (not used in layout)
+├── bulk-actions-bar.tsx      # Bulk operations toolbar (select all, delete, complete) with loading states
+├── category-manager.tsx      # Category CRUD dialog with toast notifications
+├── error-boundary.tsx        # Error boundary component for graceful error handling
+├── keyboard-shortcuts.tsx    # Keyboard shortcuts help modal
+├── pomodoro-timer.tsx        # Pomodoro timer component
+├── quick-view.tsx            # Dashboard quick stats cards (integrated in home page)
+├── reminder-manager.tsx      # Reminder management component (integrated in task form)
+├── sidebar.tsx               # Main sidebar navigation
+├── task-filters.tsx          # Filter component (status, priority, category)
+├── task-form.tsx             # Task creation/edit form with reminder management and loading states
+├── task-item.tsx             # Individual task card with bulk selection support and loading states
+├── task-list-view.tsx        # Main task list container with bulk operations and loading states
+├── theme-provider.tsx        # Theme context (not used in layout)
+├── toaster.tsx               # Toast notification component (Sonner)
+├── ui/
+│   ├── checkbox.tsx          # Checkbox component for bulk selection
+│   └── ... (other UI primitives)
 ├── shared/
-│   ├── empty-state.tsx        # Empty state component
-│   ├── header.tsx             # Page header component
-│   ├── metadata-badge.tsx     # Badge for counts
-│   ├── section-header.tsx     # Collapsible section header
-│   ├── tabs-section.tsx       # Tab wrapper component
-│   └── task-metadata.tsx       # Task metadata display
+│   ├── empty-state.tsx       # Empty state component
+│   ├── header.tsx            # Page header component
+│   ├── loading-spinner.tsx   # Loading spinner component with size variants
+│   ├── metadata-badge.tsx    # Badge for counts
+│   ├── section-header.tsx    # Collapsible section header
+│   ├── tabs-section.tsx      # Tab wrapper component
+│   └── task-metadata.tsx     # Task metadata display
 └── tasks/
-    ├── task-header.tsx         # Task header component
-    ├── task-list.tsx           # Task list rendering
-    └── task-subtasks.tsx       # Subtask rendering
+    ├── task-header.tsx       # Task header component
+    ├── task-list.tsx         # Task list rendering with bulk selection and loading states
+    └── task-subtasks.tsx     # Subtask rendering
 ```
+
+## 11. Validation Schemas
+
+### Zod Validation Implementation
+All server actions now use Zod schemas for input validation:
+
+- **Task Schemas**: `createTaskSchema`, `updateTaskSchema`, `taskIdSchema`
+- **Category Schemas**: `createCategorySchema`, `updateCategorySchema`, `categoryIdSchema`
+- **Subtask Schemas**: `addSubtaskSchema`, `updateSubtaskSchema`, `deleteSubtaskSchema`, `toggleSubtaskSchema`
+- **Reminder Schemas**: `createReminderSchema`, `reminderIdSchema`
+
+Validation errors are caught and returned as user-friendly error messages via toast notifications.
+
+## 12. Recent Feature Additions (2024-11-02)
+
+### Loading States & Optimistic Updates ✅ COMPLETED
+- ✅ Consistent loading indicators for all async operations
+- ✅ Loading states for task updates, deletions, and bulk operations
+- ✅ Loading spinners in buttons and components during operations
+- ✅ Optimistic updates with rollback on error for all mutations
+- ✅ Disabled states during operations to prevent duplicate actions
+- ✅ Loading spinner component (`loading-spinner.tsx`) with size variants
+
+### Error Boundaries ✅ COMPLETED
+- ✅ ErrorBoundary component implemented for graceful error handling
+- ✅ Integrated into root layout to catch application-wide errors
+- ✅ Custom error UI with reset functionality
+- ✅ Rollback mechanism for optimistic updates on error
+
+### Reminder Management
+- ✅ `ReminderManager` component integrated into TaskForm
+- ✅ Create reminders: 10min, 1h, 1d before due date, or custom time
+- ✅ View and delete reminders for each task
+- ✅ Requires task to have a due date
+- ✅ Reminders displayed with formatted date/time
+
+### Bulk Operations
+- ✅ Bulk selection with checkboxes on task items
+- ✅ `BulkActionsBar` component for bulk actions
+- ✅ Select all / Deselect all functionality
+- ✅ Bulk delete: Delete multiple tasks at once
+- ✅ Bulk complete: Mark multiple tasks as complete
+- ✅ Toast notifications for bulk operations
+- ✅ `useBulkSelection` hook for state management
+
+### Additional Improvements
+- ✅ Enhanced search includes task descriptions
+- ✅ All UI preferences persisted in localStorage
+- ✅ Comprehensive error handling with toast notifications
+- ✅ Zod validation for all server actions
+- ✅ QuickView dashboard integrated into home page
+- ✅ Loading states for all async operations
+- ✅ Optimistic updates with rollback on error
+- ✅ Error boundaries for graceful error handling
+- ✅ `useAsyncOperation` hook for consistent async patterns
+- ✅ `LoadingSpinner` component with size variants
 
 ---
 

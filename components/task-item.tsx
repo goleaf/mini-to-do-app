@@ -8,6 +8,7 @@ import { TaskHeader } from "@/components/tasks/task-header"
 import { TaskSubtasks } from "@/components/tasks/task-subtasks"
 import { isOverdue } from "@/lib/utils/formatting"
 import { CheckCircle2, Circle, Trash2, Edit2 } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface TaskItemProps {
   task: Task
@@ -17,6 +18,10 @@ interface TaskItemProps {
   onDelete: (id: string) => void
   onTaskUpdate?: (task: Task) => void
   compact?: boolean
+  selectable?: boolean
+  isSelected?: boolean
+  onToggleSelect?: (id: string) => void
+  isDeleting?: boolean
 }
 
 export function TaskItem({
@@ -27,6 +32,10 @@ export function TaskItem({
   onDelete,
   onTaskUpdate,
   compact,
+  selectable = false,
+  isSelected = false,
+  onToggleSelect,
+  isDeleting = false,
 }: TaskItemProps) {
   const taskIsOverdue = isOverdue(task.dueDate || "", task.isCompleted)
 
@@ -35,9 +44,18 @@ export function TaskItem({
       <div
         className={`p-3 border border-border transition-material hover:shadow-sm hover:border-primary/50 ${
           task.isCompleted ? "opacity-60 bg-muted" : "bg-card hover:bg-card"
-        } ${taskIsOverdue ? "border-red-500/50 bg-red-50/50 dark:bg-red-950/30" : ""}`}
+        } ${taskIsOverdue ? "border-red-500/50 bg-red-50/50 dark:bg-red-950/30" : ""} ${
+          isSelected ? "ring-2 ring-primary" : ""
+        } ${isDeleting ? "opacity-50 pointer-events-none" : ""}`}
       >
         <div className="flex items-center gap-3">
+          {selectable && onToggleSelect && (
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelect(task.id)}
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
           <button
             onClick={() => onComplete(task.id)}
             className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
@@ -78,16 +96,29 @@ export function TaskItem({
     <div
       className={`border border-border bg-card transition-material hover:shadow-md hover:border-primary/50 overflow-hidden ${
         task.isCompleted ? "opacity-70" : ""
-      } ${taskIsOverdue ? "border-red-500/50" : ""}`}
+      } ${taskIsOverdue ? "border-red-500/50" : ""} ${isSelected ? "ring-2 ring-primary" : ""} ${
+        isDeleting ? "opacity-50 pointer-events-none" : ""
+      }`}
     >
       <div className="p-4">
-        <TaskHeader
-          task={task}
-          category={category}
-          onComplete={() => onComplete(task.id)}
-          onEdit={() => onEdit(task)}
-          onDelete={() => onDelete(task.id)}
-        />
+        <div className="flex items-start gap-3">
+          {selectable && onToggleSelect && (
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelect(task.id)}
+              className="mt-1"
+            />
+          )}
+          <div className="flex-1">
+            <TaskHeader
+              task={task}
+              category={category}
+              onComplete={() => onComplete(task.id)}
+              onEdit={() => onEdit(task)}
+              onDelete={() => onDelete(task.id)}
+            />
+          </div>
+        </div>
       </div>
 
       <TaskSubtasks task={task} onTaskUpdate={onTaskUpdate} />

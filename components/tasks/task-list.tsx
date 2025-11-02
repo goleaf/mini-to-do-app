@@ -12,6 +12,10 @@ interface TaskListProps {
   onTaskUpdate?: (task: Task) => void
   groupByStatus?: boolean
   statusLabels?: Record<string, string>
+  selectable?: boolean
+  isSelected?: (id: string) => boolean
+  onToggleSelect?: (id: string) => void
+  isDeleting?: (id: string) => boolean
 }
 
 const DEFAULT_STATUS_LABELS: Record<string, string> = {
@@ -29,6 +33,10 @@ export function TaskList({
   onTaskUpdate,
   groupByStatus = false,
   statusLabels = DEFAULT_STATUS_LABELS,
+  selectable = false,
+  isSelected,
+  onToggleSelect,
+  isDeleting,
 }: TaskListProps) {
   const getCategoryById = (id?: string) => categories.find((c) => c.id === id)
 
@@ -62,6 +70,10 @@ export function TaskList({
                     onDelete={onDelete}
                     onTaskUpdate={onTaskUpdate}
                     compact={false}
+                    selectable={selectable}
+                    isSelected={isSelected?.(task.id)}
+                    onToggleSelect={onToggleSelect}
+                    isDeleting={isDeleting?.(task.id)}
                   />
                 ))}
               </div>
@@ -84,6 +96,10 @@ export function TaskList({
           onDelete={onDelete}
           onTaskUpdate={onTaskUpdate}
           compact={false}
+          selectable={selectable}
+          isSelected={isSelected?.(task.id)}
+          onToggleSelect={onToggleSelect}
+          isDeleting={isDeleting?.(task.id)}
         />
       ))}
     </div>

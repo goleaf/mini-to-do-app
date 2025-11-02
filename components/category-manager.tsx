@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react"
+import { toast } from "sonner"
 import type { Category } from "@/lib/db"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -30,28 +31,46 @@ export function CategoryManagerContent({ categories, onCategoriesChange, classNa
 
   const handleSaveEdit = async () => {
     if (!editingName.trim() || !editingId) return
-    await updateCategory(editingId, { name: editingName, color: editingColor })
-    setEditingId(null)
-    onCategoriesChange()
+    try {
+      await updateCategory(editingId, { name: editingName, color: editingColor })
+      setEditingId(null)
+      toast.success("Category updated successfully")
+      onCategoriesChange()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update category")
+    }
   }
 
   const handleDeleteCategory = async (id: string) => {
     if (confirm("Are you sure you want to delete this category?")) {
-      await deleteCategory(id)
-      onCategoriesChange()
+      try {
+        await deleteCategory(id)
+        toast.success("Category deleted successfully")
+        onCategoriesChange()
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to delete category")
+      }
     }
   }
 
   const handleCreateCategory = async () => {
-    if (!newCategoryName.trim()) return
-    await createCategory({
-      name: newCategoryName,
-      color: newCategoryColor,
-      icon: "inbox",
-    })
-    setNewCategoryName("")
-    setNewCategoryColor("#0891b2")
-    onCategoriesChange()
+    if (!newCategoryName.trim()) {
+      toast.error("Category name is required")
+      return
+    }
+    try {
+      await createCategory({
+        name: newCategoryName,
+        color: newCategoryColor,
+        icon: "inbox",
+      })
+      setNewCategoryName("")
+      setNewCategoryColor("#0891b2")
+      toast.success("Category created successfully")
+      onCategoriesChange()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to create category")
+    }
   }
 
   return (

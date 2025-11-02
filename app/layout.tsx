@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/toaster"
+import { ErrorBoundary } from "@/components/error-boundary"
 import "./globals.css"
 
 const _inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
@@ -21,7 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${_inter.variable} font-sans antialiased`}>
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
         <Analytics />
         <Toaster />
       </body>

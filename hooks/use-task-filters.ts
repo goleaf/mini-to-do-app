@@ -10,7 +10,12 @@ export function useTaskFilters(tasks: Task[]) {
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
       if (filterStatus !== "all" && task.status !== filterStatus) return false
-      if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) return false
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        const matchesTitle = task.title.toLowerCase().includes(query)
+        const matchesDescription = task.description?.toLowerCase().includes(query) || false
+        if (!matchesTitle && !matchesDescription) return false
+      }
       return true
     })
   }, [tasks, searchQuery, filterStatus])

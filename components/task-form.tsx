@@ -7,15 +7,17 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, X } from "lucide-react"
+import { ReminderManager } from "@/components/reminder-manager"
 
 interface TaskFormProps {
   task?: Task
   categories: Category[]
   onSubmit: (data: Omit<Task, "id" | "createdAt" | "updatedAt">) => void
   onCancel: () => void
+  isLoading?: boolean
 }
 
-export function TaskForm({ task, categories, onSubmit, onCancel }: TaskFormProps) {
+export function TaskForm({ task, categories, onSubmit, onCancel, isLoading = false }: TaskFormProps) {
   const [title, setTitle] = useState(task?.title || "")
   const [description, setDescription] = useState(task?.description || "")
   const [priority, setPriority] = useState(task?.priority || "normal")
@@ -122,6 +124,12 @@ export function TaskForm({ task, categories, onSubmit, onCancel }: TaskFormProps
         />
       </div>
 
+      {task && task.id && (
+        <div className="pt-2 border-t">
+          <ReminderManager taskId={task.id} dueDate={dueDate || undefined} />
+        </div>
+      )}
+
       {subtasks.length > 0 && (
         <div className="space-y-2">
           <label className="text-sm text-muted-foreground block">Subtasks</label>
@@ -166,10 +174,10 @@ export function TaskForm({ task, categories, onSubmit, onCancel }: TaskFormProps
       </div>
 
       <div className="flex gap-3 pt-4 border-t">
-        <Button type="submit" className="flex-1">
-          {task ? "Update" : "Create"}
+        <Button type="submit" className="flex-1" disabled={isLoading}>
+          {isLoading ? "Processing..." : task ? "Update" : "Create"}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1" disabled={isLoading}>
           Cancel
         </Button>
       </div>

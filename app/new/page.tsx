@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import type { Task, Category } from "@/lib/db"
 import { TaskForm } from "@/components/task-form"
 import { getCategories, createTask } from "@/lib/actions"
@@ -15,16 +16,27 @@ export default function NewTaskPage() {
 
   useEffect(() => {
     async function loadData() {
-      const fetchedCategories = await getCategories()
-      setCategories(fetchedCategories)
-      setIsLoading(false)
+      try {
+        const fetchedCategories = await getCategories()
+        setCategories(fetchedCategories)
+      } catch (error) {
+        toast.error("Failed to load categories")
+        console.error(error)
+      } finally {
+        setIsLoading(false)
+      }
     }
     loadData()
   }, [])
 
   const handleAddTask = async (data: Omit<Task, "id" | "createdAt" | "updatedAt">) => {
-    await createTask(data)
-    router.push("/")
+    try {
+      await createTask(data)
+      toast.success("Task created successfully")
+      router.push("/")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to create task")
+    }
   }
 
   if (isLoading) {

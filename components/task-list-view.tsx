@@ -5,9 +5,12 @@ import { TaskList } from "@/components/tasks/task-list"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useTaskFilters } from "@/hooks/use-task-filters"
+import { useBulkSelection } from "@/hooks/use-bulk-selection"
+import { BulkActionsBar } from "@/components/bulk-actions-bar"
 import { EmptyState } from "@/components/shared/empty-state"
 import { MetadataBadge } from "@/components/shared/metadata-badge"
 import { Search } from "lucide-react"
+import { toast } from "sonner"
 
 interface TaskListViewProps {
   tasks: Task[]
@@ -15,6 +18,10 @@ interface TaskListViewProps {
   onUpdate: (taskId: string, updates: Partial<Task>) => Promise<void>
   onDelete: (taskId: string) => Promise<void>
   onEdit: (task: Task) => void
+  onBulkDelete?: (taskIds: string[]) => Promise<void>
+  onBulkUpdate?: (updates: { id: string; changes: Partial<Task> }[]) => Promise<void>
+  isDeleting?: (id: string) => boolean
+  isBulkOperation?: boolean
 }
 
 const STATUS_LABELS = {
@@ -24,12 +31,62 @@ const STATUS_LABELS = {
   done: "Done",
 } as const
 
-export function TaskListView({ tasks, categories, onUpdate, onDelete, onEdit }: TaskListViewProps) {
+export function TaskListView({
+  tasks,
+  categories,
+  onUpdate,
+  onDelete,
+  onEdit,
+  onBulkDelete,
+  onBulkUpdate,
+  isDeleting,
+  isBulkOperation = false,
+}: TaskListViewProps) {
   const { searchQuery, setSearchQuery, filterStatus, setFilterStatus, filteredTasks, tabStats } =
     useTaskFilters(tasks)
+  const { selectedIds, selectedCount, toggleSelection, selectAll, clearSelection, isSelected } =
+    useBulkSelection()
+
+  const handleBulkDelete = async () => {
+    if (!onBulkDelete || selectedIds.length === 0) return
+    try {
+      await onBulkDelete(selectedIds)
+      toast.success(`${selectedIds.length} task(s) deleted successfully`)
+      clearSelection()
+    } catch (error) {
+      toast.error("Failed to delete tasks")
+    }
+  }
+
+  const handleBulkComplete = async () => {
+    if (!onBulkUpdate || selectedIds.length === 0) return
+    try {
+      await onBulkUpdate(selectedIds.map((id) => ({ id, changes: { isCompleted: true } })))
+      toast.success(`${selectedIds.length} task(s) marked as complete`)
+      clearSelection()
+    } catch (error) {
+      toast.error("Failed to update tasks")
+    }
+  }
+
+  const handleSelectAll = () => {
+    const currentTasks = filterStatus === "all" ? filteredTasks : filteredTasks.filter((t) => t.status === filterStatus)
+    selectAll(currentTasks.map((t) => t.id))
+  }
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
+      <BulkActionsBar
+        selectedCount={selectedCount}
+        onSelectAll={handleSelectAll}
+        onClearSelection={clearSelection}
+        onBulkDelete={handleBulkDelete}
+        onBulkComplete={handleBulkComplete}
+        totalCount={filteredTasks.length}
+        allSelected={selectedCount === filteredTasks.length && filteredTasks.length > 0}
+        isLoading={isBulkOperation}
+      />
+
       <div className="px-8 py-6 border-b border-border flex-shrink-0">
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
@@ -87,6 +144,10 @@ export function TaskListView({ tasks, categories, onUpdate, onDelete, onEdit }: 
                     onDelete={onDelete}
                     groupByStatus={status === "all"}
                     statusLabels={STATUS_LABELS}
+                    selectable={true}
+                    isSelected={isSelected}
+                    onToggleSelect={toggleSelection}
+                    isDeleting={isDeleting}
                   />
                 </div>
               )}

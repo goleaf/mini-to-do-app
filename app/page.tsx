@@ -2,27 +2,38 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import type { Task, Category } from "@/lib/db"
 import { Sidebar } from "@/components/sidebar"
 import { TaskListView } from "@/components/task-list-view"
 import { PomodoroTimer } from "@/components/pomodoro-timer"
 import { AnalyticsPanel } from "@/components/analytics-panel"
+import { QuickView } from "@/components/quick-view"
 import { TaskForm } from "@/components/task-form"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { PageHeader } from "@/components/shared/header"
 import { TabsSection } from "@/components/shared/tabs-section"
 import { Plus, Moon, Sun } from "lucide-react"
-import { getTasks, getCategories, updateTask, deleteTask } from "@/lib/actions"
+import { getTasks, getCategories, updateTask, deleteTask, bulkUpdateTasks } from "@/lib/actions"
 
 export default function Home() {
   const router = useRouter()
   const [tasks, setTasks] = useState<Task[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [darkMode, setDarkMode] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("darkMode")
+      return saved === "true"
+    }
+    return false
+  })
   const [showForm, setShowForm] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
+  const [isBulkOperation, setIsBulkOperation] = useState(false)
 
   const handleCategorySelect = (categoryId: string | null) => {
     setSelectedCategory(categoryId)
@@ -33,10 +44,16 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       setIsLoading(true)
-      const [fetchedTasks, fetchedCategories] = await Promise.all([getTasks(), getCategories()])
-      setTasks(fetchedTasks)
-      setCategories(fetchedCategories)
-      setIsLoading(false)
+      try {
+        const [fetchedTasks, fetchedCategories] = await Promise.all([getTasks(), getCategories()])
+        setTasks(fetchedTasks)
+        setCategories(fetchedCategories)
+      } catch (error) {
+        toast.error("Failed to load tasks and categories")
+        console.error(error)
+      } finally {
+        setIsLoading(false)
+      }
     }
     loadData()
   }, [])
@@ -47,21 +64,96 @@ export default function Home() {
     } else {
       document.documentElement.classList.remove("dark")
     }
+    localStorage.setItem("darkMode", darkMode.toString())
   }, [darkMode])
 
   const handleUpdateTask = async (id: string, data: Partial<Task>) => {
-    const updated = await updateTask(id, data)
-    if (updated) {
-      setTasks(tasks.map((t) => (t.id === id ? updated : t)))
-      setEditingTask(null)
-      setShowForm(false)
+    setIsUpdating(true)
+    // Optimistic update
+    const originalTask = tasks.find((t) => t.id === id)
+    if (originalTask) {
+      setTasks(tasks.map((t) => (t.id === id ? { ...t, ...data } : t)))
+    }
+
+    try {
+      const updated = await updateTask(id, data)
+      if (updated) {
+        setTasks(tasks.map((t) => (t.id === id ? updated : t)))
+        setEditingTask(null)
+        setShowForm(false)
+        toast.success("Task updated successfully")
+      }
+    } catch (error) {
+      // Rollback optimistic update
+      if (originalTask) {
+        setTasks(tasks.map((t) => (t.id === id ? originalTask : t)))
+      }
+      toast.error(error instanceof Error ? error.message : "Failed to update task")
+    } finally {
+      setIsUpdating(false)
     }
   }
 
   const handleDeleteTask = async (id: string) => {
-    const success = await deleteTask(id)
-    if (success) {
-      setTasks(tasks.filter((t) => t.id !== id))
+    setIsDeleting(id)
+    // Optimistic update
+    const originalTasks = [...tasks]
+    setTasks(tasks.filter((t) => t.id !== id))
+
+    try {
+      const success = await deleteTask(id)
+      if (!success) {
+        throw new Error("Delete operation failed")
+      }
+      toast.success("Task deleted successfully")
+    } catch (error) {
+      // Rollback optimistic update
+      setTasks(originalTasks)
+      toast.error(error instanceof Error ? error.message : "Failed to delete task")
+    } finally {
+      setIsDeleting(null)
+    }
+  }
+
+  const handleBulkDelete = async (taskIds: string[]) => {
+    setIsBulkOperation(true)
+    // Optimistic update
+    const originalTasks = [...tasks]
+    setTasks(tasks.filter((t) => !taskIds.includes(t.id)))
+
+    try {
+      await Promise.all(taskIds.map((id) => deleteTask(id)))
+      toast.success(`${taskIds.length} task(s) deleted successfully`)
+    } catch (error) {
+      // Rollback optimistic update
+      setTasks(originalTasks)
+      throw error
+    } finally {
+      setIsBulkOperation(false)
+    }
+  }
+
+  const handleBulkUpdate = async (updates: { id: string; changes: Partial<Task> }[]) => {
+    setIsBulkOperation(true)
+    // Optimistic update
+    const originalTasks = [...tasks]
+    const updatedTasks = tasks.map((task) => {
+      const update = updates.find((u) => u.id === task.id)
+      return update ? { ...task, ...update.changes } : task
+    })
+    setTasks(updatedTasks)
+
+    try {
+      await bulkUpdateTasks(updates)
+      const refreshedTasks = await getTasks()
+      setTasks(refreshedTasks)
+      toast.success(`${updates.length} task(s) updated successfully`)
+    } catch (error) {
+      // Rollback optimistic update
+      setTasks(originalTasks)
+      throw error
+    } finally {
+      setIsBulkOperation(false)
     }
   }
 
@@ -122,13 +214,24 @@ export default function Home() {
 
         <TabsSection tabs={tabs} value={activeTab} onValueChange={setActiveTab}>
           {activeTab === "tasks" && (
-            <TaskListView
-              tasks={displayTasks}
-              categories={categories}
-              onUpdate={handleUpdateTask}
-              onDelete={handleDeleteTask}
-              onEdit={handleEditTask}
-            />
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="p-8 pb-0">
+                <QuickView tasks={tasks} categories={categories} />
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <TaskListView
+                  tasks={displayTasks}
+                  categories={categories}
+                  onUpdate={handleUpdateTask}
+                  onDelete={handleDeleteTask}
+                  onEdit={handleEditTask}
+                  onBulkDelete={handleBulkDelete}
+                  onBulkUpdate={handleBulkUpdate}
+                  isDeleting={(id) => isDeleting === id}
+                  isBulkOperation={isBulkOperation}
+                />
+              </div>
+            </div>
           )}
 
           {activeTab === "pomodoro" && (
@@ -171,6 +274,7 @@ export default function Home() {
                 setShowForm(false)
                 setEditingTask(null)
               }}
+              isLoading={isUpdating}
             />
           </DialogContent>
         </Dialog>
