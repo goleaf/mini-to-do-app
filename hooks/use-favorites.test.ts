@@ -1,6 +1,37 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useFavorites } from './use-favorites'
+
+// Mock localStorage
+const localStorageMock = (() => {
+  let store: Record<string, string> = {}
+
+  return {
+    getItem: vi.fn((key: string) => store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value.toString()
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key]
+    }),
+    clear: vi.fn(() => {
+      store = {}
+    }),
+  }
+})()
+
+// Setup localStorage mock before tests
+beforeEach(() => {
+  localStorageMock.clear()
+  vi.stubGlobal("localStorage", localStorageMock)
+  // Ensure window is defined
+  if (typeof window === "undefined") {
+    // @ts-expect-error - creating window for test
+    global.window = {} as Window & typeof globalThis
+  }
+  // @ts-expect-error - adding localStorage to window
+  window.localStorage = localStorageMock
+})
 
 describe('useFavorites', () => {
   it('should initialize with empty favorites array', () => {

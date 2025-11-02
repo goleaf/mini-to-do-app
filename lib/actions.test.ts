@@ -75,9 +75,8 @@ describe('Actions', () => {
       expect(updated?.updatedAt).not.toBe(firstTask.updatedAt)
     })
 
-    it('should return null when updating non-existent task', async () => {
-      const updated = await updateTask('non-existent-id', { title: 'Updated' })
-      expect(updated).toBeNull()
+    it('should throw error when updating non-existent task', async () => {
+      await expect(updateTask('non-existent-id', { title: 'Updated' })).rejects.toThrow('Task with id non-existent-id not found')
     })
 
     it('should delete a task', async () => {
@@ -92,9 +91,8 @@ describe('Actions', () => {
       expect(updatedTasks.find((t) => t.id === firstTask.id)).toBeUndefined()
     })
 
-    it('should return false when deleting non-existent task', async () => {
-      const deleted = await deleteTask('non-existent-id')
-      expect(deleted).toBe(false)
+    it('should throw error when deleting non-existent task', async () => {
+      await expect(deleteTask('non-existent-id')).rejects.toThrow('Task with id non-existent-id not found')
     })
 
     it('should bulk update tasks', async () => {
@@ -197,9 +195,8 @@ describe('Actions', () => {
       expect(updated?.name).toBe('Updated Category')
     })
 
-    it('should return null when updating non-existent category', async () => {
-      const updated = await updateCategory('non-existent-id', { name: 'Updated' })
-      expect(updated).toBeNull()
+    it('should throw error when updating non-existent category', async () => {
+      await expect(updateCategory('non-existent-id', { name: 'Updated' })).rejects.toThrow('Category with id non-existent-id not found')
     })
 
     it('should delete a category', async () => {
@@ -247,9 +244,8 @@ describe('Actions', () => {
       expect(deleted).toBe(true)
     })
 
-    it('should return false when deleting non-existent reminder', async () => {
-      const deleted = await deleteReminder('non-existent-id')
-      expect(deleted).toBe(false)
+    it('should throw error when deleting non-existent reminder', async () => {
+      await expect(deleteReminder('non-existent-id')).rejects.toThrow('Reminder with id non-existent-id not found')
     })
   })
 })

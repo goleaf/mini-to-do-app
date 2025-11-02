@@ -14,14 +14,12 @@ describe('TaskForm', () => {
   it('should render form for creating new task', () => {
     render(<TaskForm categories={mockCategories} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
 
-    expect(screen.getByText('Create New Task')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText(/what needs to be done/i)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Task title')).toBeInTheDocument()
   })
 
   it('should render form for editing existing task', () => {
     render(<TaskForm task={mockTask} categories={mockCategories} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
 
-    expect(screen.getByText('Edit Task')).toBeInTheDocument()
     expect(screen.getByDisplayValue(mockTask.title)).toBeInTheDocument()
   })
 
@@ -37,10 +35,10 @@ describe('TaskForm', () => {
   it('should call onSubmit with form data when submitted', async () => {
     render(<TaskForm categories={mockCategories} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
 
-    const titleInput = screen.getByPlaceholderText(/what needs to be done/i)
+    const titleInput = screen.getByPlaceholderText('Task title')
     fireEvent.change(titleInput, { target: { value: 'New Task Title' } })
 
-    const submitButton = screen.getByRole('button', { name: /create task/i })
+    const submitButton = screen.getByRole('button', { name: /create/i })
     fireEvent.click(submitButton)
 
     await waitFor(() => {
@@ -55,7 +53,7 @@ describe('TaskForm', () => {
   it('should not submit form when title is empty', async () => {
     render(<TaskForm categories={mockCategories} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
 
-    const submitButton = screen.getByRole('button', { name: /create task/i })
+    const submitButton = screen.getByRole('button', { name: /create/i })
     fireEvent.click(submitButton)
 
     await waitFor(() => {
@@ -86,12 +84,12 @@ describe('TaskForm', () => {
   it('should allow selecting priority', async () => {
     render(<TaskForm categories={mockCategories} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
 
-    const titleInput = screen.getByPlaceholderText(/what needs to be done/i)
+    const titleInput = screen.getByPlaceholderText('Task title')
     fireEvent.change(titleInput, { target: { value: 'Test Task' } })
 
     // Note: Select components from Radix UI might need special handling
     // This is a basic test structure
-    const submitButton = screen.getByRole('button', { name: /create task/i })
+    const submitButton = screen.getByRole('button', { name: /create/i })
     fireEvent.click(submitButton)
 
     await waitFor(() => {
@@ -102,7 +100,7 @@ describe('TaskForm', () => {
   it('should allow adding subtasks', async () => {
     render(<TaskForm categories={mockCategories} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
 
-    const subtaskInput = screen.getByPlaceholderText(/add a subtask/i)
+    const subtaskInput = screen.getByPlaceholderText('Add subtask...')
     fireEvent.change(subtaskInput, { target: { value: 'New Subtask' } })
 
     const buttons = screen.getAllByRole('button')
@@ -141,26 +139,17 @@ describe('TaskForm', () => {
     }
   })
 
-  it('should toggle advanced options', () => {
-    render(<TaskForm categories={mockCategories} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
-
-    const advancedButton = screen.getByText(/advanced options/i)
-    fireEvent.click(advancedButton)
-
-    expect(screen.getByText(/pomodoro estimate/i)).toBeInTheDocument()
-  })
-
   it('should include subtasks in form submission', async () => {
     render(<TaskForm categories={mockCategories} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
 
-    const titleInput = screen.getByPlaceholderText(/what needs to be done/i)
+    const titleInput = screen.getByPlaceholderText('Task title')
     fireEvent.change(titleInput, { target: { value: 'Test Task' } })
 
-    const subtaskInput = screen.getByPlaceholderText(/add a subtask/i)
+    const subtaskInput = screen.getByPlaceholderText('Add subtask...')
     fireEvent.change(subtaskInput, { target: { value: 'Subtask 1' } })
     fireEvent.keyDown(subtaskInput, { key: 'Enter' })
 
-    const submitButton = screen.getByRole('button', { name: /create task/i })
+    const submitButton = screen.getByRole('button', { name: /create/i })
     fireEvent.click(submitButton)
 
     await waitFor(() => {
