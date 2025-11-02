@@ -57,8 +57,8 @@ export function AnalyticsPanel({ tasks, categories }: AnalyticsPanelProps) {
       <Card className="p-6">
         <h3 className="font-semibold mb-4">Completion Rate</h3>
         <div className="text-4xl font-bold text-primary mb-2">{completionRate}%</div>
-        <div className="w-full bg-muted rounded-full h-2">
-          <div className="bg-green-600 h-2 rounded-full transition-all" style={{ width: `${completionRate}%` }} />
+        <div className="w-full bg-muted h-2">
+          <div className="bg-green-600 h-2 transition-all" style={{ width: `${completionRate}%` }} />
         </div>
       </Card>
 

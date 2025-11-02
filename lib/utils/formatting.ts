@@ -9,13 +9,19 @@ export function formatDate(date: string, options?: { showYear?: boolean }) {
 }
 
 export function isOverdue(dueDate: string, isCompleted: boolean): boolean {
-  return dueDate && new Date(dueDate) < new Date() && !isCompleted ? true : false
+  if (!dueDate || isCompleted) return false
+  const [year, month, day] = dueDate.split('-').map(Number)
+  const due = new Date(year, month - 1, day)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  due.setHours(0, 0, 0, 0)
+  return due < today
 }
 
 // Status formatting
 export function formatStatus(status: string): string {
   return status
-    .replace("_", " ")
+    .replace(/_/g, " ")
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ")

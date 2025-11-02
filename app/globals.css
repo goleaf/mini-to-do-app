@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "react-tabs/style/react-tabs.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -168,5 +169,38 @@
   /* Material Design focus states */
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-background;
+  }
+
+  /* React Tabs customization */
+  .react-tabs__tab-list {
+    border-bottom: 1px solid transparent;
+    margin: 0;
+    padding: 0;
+  }
+
+  .react-tabs__tab {
+    border: none;
+    background: transparent;
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .react-tabs__tab--selected {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--primary);
+    color: var(--foreground);
+  }
+
+  .react-tabs__tab:focus:after {
+    display: none;
+  }
+
+  .react-tabs__tab-panel {
+    display: none;
+  }
+
+  .react-tabs__tab-panel--selected {
+    display: block;
   }
 }

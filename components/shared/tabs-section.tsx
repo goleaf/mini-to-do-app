@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { MetadataBadge } from "@/components/shared/metadata-badge"
 
 interface Tab {
   value: string
@@ -29,10 +30,10 @@ export function TabsSection({ tabs, value, onValueChange, children }: TabsSectio
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-3 text-sm font-medium data-[state=inactive]:text-muted-foreground hover:text-foreground"
+              className="px-4 py-3 text-sm font-medium"
             >
               {tab.label}
-              {tab.count !== undefined && <span className="ml-2 text-xs text-muted-foreground">{tab.count}</span>}
+              {tab.count !== undefined && <MetadataBadge label={tab.count.toString()} className="ml-2" />}
             </TabsTrigger>
           ))}
         </TabsList>

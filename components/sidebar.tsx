@@ -2,10 +2,11 @@
 
 import type React from "react"
 import { useState } from "react"
-import type { Category } from "@/lib/db"
+import type { Category, Task } from "@/lib/db"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SectionHeader } from "@/components/shared/section-header"
+import { MetadataBadge } from "@/components/shared/metadata-badge"
 import { useExpandedSections } from "@/hooks/use-expanded-sections"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useSearch } from "@/hooks/use-search"
@@ -26,7 +27,8 @@ import { CategoryManager } from "@/components/category-manager"
 
 interface SidebarProps {
   categories: Category[]
-  onCategorySelect: (categoryId: string) => void
+  tasks: Task[]
+  onCategorySelect: (categoryId: string | null) => void
   selectedCategory: string | null
   onCategoriesChange: () => void
   totalTasks: number
@@ -41,6 +43,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 
 export function Sidebar({
   categories,
+  tasks,
   onCategorySelect,
   selectedCategory,
   onCategoriesChange,
@@ -62,11 +65,15 @@ export function Sidebar({
   const favoriteCategories = filteredCategories.filter((cat) => isFavorite(cat.id))
   const otherCategories = filteredCategories.filter((cat) => !isFavorite(cat.id))
 
+  const getCategoryTaskCount = (categoryId: string) => {
+    return tasks.filter((task) => task.categoryId === categoryId).length
+  }
+
   return (
     <div className="w-64 bg-background border-r border-border h-screen flex flex-col overflow-hidden transition-smooth">
       <div className="p-6 border-b border-border flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
+          <div className="w-9 h-9 bg-primary flex items-center justify-center">
             <CheckSquare2 className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -83,7 +90,7 @@ export function Sidebar({
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-9 text-sm bg-secondary border-0 rounded-lg placeholder:text-muted-foreground"
+            className="pl-10 h-9 text-sm bg-secondary border-0 placeholder:text-muted-foreground"
           />
         </div>
       </div>
@@ -98,6 +105,17 @@ export function Sidebar({
           />
           {expandedSections.categories && (
             <div className="space-y-1">
+              <button
+                onClick={() => onCategorySelect(null)}
+                className={`w-full flex items-center gap-3 px-3 py-2 transition-smooth text-sm ${
+                  selectedCategory === null
+                    ? "bg-secondary text-primary font-medium"
+                    : "text-foreground hover:bg-secondary"
+                }`}
+              >
+                <span className="flex-1 text-left">All Tasks</span>
+                <MetadataBadge label={totalTasks.toString()} className="mr-1" />
+              </button>
               {otherCategories.length === 0 ? (
                 <p className="text-xs text-muted-foreground p-2">No categories</p>
               ) : (
@@ -105,17 +123,20 @@ export function Sidebar({
                   <button
                     key={category.id}
                     onClick={() => onCategorySelect(category.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-smooth text-sm group/item ${
+                    className={`w-full flex items-center gap-3 px-3 py-2 transition-smooth text-sm group/item ${
                       selectedCategory === category.id
                         ? "bg-secondary text-primary font-medium"
                         : "text-foreground hover:bg-secondary"
                     }`}
                   >
                     <div
-                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      className="w-2.5 h-2.5 flex-shrink-0"
                       style={{ backgroundColor: category.color }}
                     />
                     <span className="flex-1 text-left truncate">{category.name}</span>
+                    {getCategoryTaskCount(category.id) > 0 && (
+                      <MetadataBadge label={getCategoryTaskCount(category.id).toString()} className="mr-1" />
+                    )}
                     <div
                       onClick={(e) => {
                         e.stopPropagation()
@@ -142,7 +163,7 @@ export function Sidebar({
           />
           {expandedSections.insights && (
             <div className="space-y-2">
-              <div className="p-3 rounded-md bg-secondary border border-border">
+              <div className="p-3 bg-secondary border border-border">
                 <div className="flex items-start gap-2">
                   <TrendingUp className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                   <div>
@@ -151,7 +172,7 @@ export function Sidebar({
                   </div>
                 </div>
               </div>
-              <div className="p-3 rounded-md bg-secondary border border-border">
+              <div className="p-3 bg-secondary border border-border">
                 <div className="flex items-start gap-2">
                   <BarChart3 className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
                   <div>

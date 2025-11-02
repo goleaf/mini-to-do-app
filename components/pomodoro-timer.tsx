@@ -123,7 +123,7 @@ export function PomodoroTimer({ taskTitle, initialMinutes = 25 }: PomodoroTimerP
         {/* Mode Indicator */}
         <div className="mb-4">
           <span
-            className={`inline-block px-4 py-1.5 rounded-full text-sm font-semibold ${
+            className={`inline-block px-4 py-1.5 text-sm font-semibold ${
               timerMode === "work" ? "bg-primary/20 text-primary" : "bg-green-500/20 text-green-600 dark:text-green-400"
             }`}
           >
@@ -143,9 +143,9 @@ export function PomodoroTimer({ taskTitle, initialMinutes = 25 }: PomodoroTimerP
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-6 h-2 bg-muted rounded-full overflow-hidden">
+        <div className="mb-6 h-2 bg-muted overflow-hidden">
           <div
-            className={`h-full transition-all rounded-full ${
+            className={`h-full transition-all ${
               timerMode === "work"
                 ? "bg-gradient-to-r from-primary to-accent"
                 : "bg-gradient-to-r from-green-500 to-emerald-500"

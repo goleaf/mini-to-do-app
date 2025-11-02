@@ -147,31 +147,61 @@ export async function initializeDefaults() {
 
 // Task CRUD Operations
 export async function getTasks(): Promise<Task[]> {
-  await initializeDefaults()
-  return Array.from(taskStore.values())
+  try {
+    await initializeDefaults()
+    return Array.from(taskStore.values())
+  } catch (error) {
+    console.error("Error fetching tasks:", error)
+    throw new Error("Failed to fetch tasks")
+  }
 }
 
 export async function createTask(task: Omit<Task, "id" | "createdAt" | "updatedAt">): Promise<Task> {
-  const newTask: Task = {
-    ...task,
-    id: `task-${Date.now()}`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+  try {
+    if (!task.title || task.title.trim().length === 0) {
+      throw new Error("Task title is required")
+    }
+
+    const newTask: Task = {
+      ...task,
+      id: `task-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    taskStore.set(newTask.id, newTask)
+    return newTask
+  } catch (error) {
+    console.error("Error creating task:", error)
+    throw error instanceof Error ? error : new Error("Failed to create task")
   }
-  taskStore.set(newTask.id, newTask)
-  return newTask
 }
 
 export async function updateTask(id: string, updates: Partial<Task>): Promise<Task | null> {
-  const task = taskStore.get(id)
-  if (!task) return null
-  const updated = { ...task, ...updates, updatedAt: new Date().toISOString() }
-  taskStore.set(id, updated)
-  return updated
+  try {
+    const task = taskStore.get(id)
+    if (!task) {
+      throw new Error(`Task with id ${id} not found`)
+    }
+    const updated = { ...task, ...updates, updatedAt: new Date().toISOString() }
+    taskStore.set(id, updated)
+    return updated
+  } catch (error) {
+    console.error("Error updating task:", error)
+    throw error instanceof Error ? error : new Error("Failed to update task")
+  }
 }
 
 export async function deleteTask(id: string): Promise<boolean> {
-  return taskStore.delete(id)
+  try {
+    const deleted = taskStore.delete(id)
+    if (!deleted) {
+      throw new Error(`Task with id ${id} not found`)
+    }
+    return deleted
+  } catch (error) {
+    console.error("Error deleting task:", error)
+    throw error instanceof Error ? error : new Error("Failed to delete task")
+  }
 }
 
 export async function bulkUpdateTasks(updates: { id: string; changes: Partial<Task> }[]): Promise<Task[]> {

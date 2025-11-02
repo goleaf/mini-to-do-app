@@ -1,11 +1,12 @@
 "use client"
 
 import type { Task, Category } from "@/lib/db"
-import { TaskItem } from "@/components/task-item"
+import { TaskList } from "@/components/tasks/task-list"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useTaskFilters } from "@/hooks/use-task-filters"
 import { EmptyState } from "@/components/shared/empty-state"
+import { MetadataBadge } from "@/components/shared/metadata-badge"
 import { Search } from "lucide-react"
 
 interface TaskListViewProps {
@@ -16,18 +17,16 @@ interface TaskListViewProps {
   onEdit: (task: Task) => void
 }
 
+const STATUS_LABELS = {
+  all: "All",
+  todo: "To Do",
+  in_progress: "In Progress",
+  done: "Done",
+} as const
+
 export function TaskListView({ tasks, categories, onUpdate, onDelete, onEdit }: TaskListViewProps) {
-  const { searchQuery, setSearchQuery, filterStatus, setFilterStatus, filteredTasks, statusGroups, tabStats } =
+  const { searchQuery, setSearchQuery, filterStatus, setFilterStatus, filteredTasks, tabStats } =
     useTaskFilters(tasks)
-
-  const getCategoryById = (id?: string) => categories.find((c) => c.id === id)
-
-  const statusLabels = {
-    all: "All",
-    todo: "To Do",
-    in_progress: "In Progress",
-    done: "Done",
-  }
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
@@ -39,7 +38,7 @@ export function TaskListView({ tasks, categories, onUpdate, onDelete, onEdit }: 
               placeholder="Search tasks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-10 bg-secondary border-0 rounded-lg"
+              className="pl-10 h-10 bg-secondary border-0"
             />
           </div>
         </div>
@@ -49,72 +48,46 @@ export function TaskListView({ tasks, categories, onUpdate, onDelete, onEdit }: 
       <Tabs value={filterStatus} onValueChange={setFilterStatus} className="flex-1 flex flex-col overflow-hidden">
         <div className="px-8 pt-6 border-b border-border flex-shrink-0">
           <TabsList className="grid w-fit grid-cols-4 gap-0 bg-transparent p-0 h-auto">
-            {Object.entries(tabStats).map(([status, count]) => (
+            {Object.entries(STATUS_LABELS).map(([status, label]) => (
               <TabsTrigger
                 key={status}
                 value={status}
-                className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-2 text-sm font-medium data-[state=inactive]:text-muted-foreground hover:text-foreground"
+                className="px-4 py-2 text-sm font-medium data-[selected]:text-foreground data-[selected]:border-b-2 data-[selected]:border-primary text-muted-foreground hover:text-foreground"
               >
-                {statusLabels[status as keyof typeof statusLabels]}
-                <span className="ml-2 text-xs text-muted-foreground">{count}</span>
+                {label}
+                <MetadataBadge label={tabStats[status as keyof typeof tabStats].toString()} className="ml-2" />
               </TabsTrigger>
             ))}
           </TabsList>
         </div>
 
         {/* Tab Content */}
-        {["all", "todo", "in_progress", "done"].map((status) => {
+        {Object.keys(STATUS_LABELS).map((status) => {
           const tasksForStatus = status === "all" ? filteredTasks : filteredTasks.filter((t) => t.status === status)
 
           return (
             <TabsContent key={status} value={status} className="flex-1 overflow-y-auto p-8">
               {tasksForStatus.length === 0 ? (
                 <EmptyState
-                  title={status === "all" ? "No tasks yet" : `No ${status.replace("_", " ")} tasks`}
+                  title={status === "all" ? "No tasks yet" : `No ${STATUS_LABELS[status as keyof typeof STATUS_LABELS].toLowerCase()} tasks`}
                   description="Create a new task to get started"
                 />
               ) : (
-                <div className="space-y-2 max-w-3xl">
-                  {status === "all"
-                    ? Object.entries(statusGroups).map(([groupStatus, groupTasks]) =>
-                        groupTasks.length > 0 ? (
-                          <div key={groupStatus} className="space-y-2">
-                            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                              {statusLabels[groupStatus as keyof typeof statusLabels]} • {groupTasks.length}
-                            </h3>
-                            <div className="space-y-2">
-                              {groupTasks.map((task) => (
-                                <TaskItem
-                                  key={task.id}
-                                  task={task}
-                                  category={getCategoryById(task.categoryId)}
-                                  onComplete={async () => {
-                                    await onUpdate(task.id, { isCompleted: !task.isCompleted })
-                                  }}
-                                  onEdit={onEdit}
-                                  onDelete={onDelete}
-                                  onToggleSubtask={async () => {}}
-                                  compact={false}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        ) : null,
-                      )
-                    : tasksForStatus.map((task) => (
-                        <TaskItem
-                          key={task.id}
-                          task={task}
-                          category={getCategoryById(task.categoryId)}
-                          onComplete={async () => {
-                            await onUpdate(task.id, { isCompleted: !task.isCompleted })
-                          }}
-                          onEdit={onEdit}
-                          onDelete={onDelete}
-                          onToggleSubtask={async () => {}}
-                          compact={false}
-                        />
-                      ))}
+                <div className="max-w-3xl">
+                  <TaskList
+                    tasks={tasksForStatus}
+                    categories={categories}
+                    onComplete={async (taskId) => {
+                      const task = tasksForStatus.find((t) => t.id === taskId)
+                      if (task) {
+                        await onUpdate(taskId, { isCompleted: !task.isCompleted })
+                      }
+                    }}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    groupByStatus={status === "all"}
+                    statusLabels={STATUS_LABELS}
+                  />
                 </div>
               )}
             </TabsContent>

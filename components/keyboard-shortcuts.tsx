@@ -39,15 +39,15 @@ export function KeyboardShortcuts({ onNewTask, onSearch }: KeyboardShortcutsProp
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">New Task</span>
-            <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">⌘ N</kbd>
+            <kbd className="px-2 py-1 bg-muted text-xs font-mono">⌘ N</kbd>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Search</span>
-            <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">⌘ K</kbd>
+            <kbd className="px-2 py-1 bg-muted text-xs font-mono">⌘ K</kbd>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Keyboard Help</span>
-            <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">?</kbd>
+            <kbd className="px-2 py-1 bg-muted text-xs font-mono">?</kbd>
           </div>
         </div>
       </DialogContent>

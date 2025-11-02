@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import type { Task, Category } from "@/lib/db"
 import { Sidebar } from "@/components/sidebar"
 import { TaskListView } from "@/components/task-list-view"
@@ -12,15 +13,20 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { PageHeader } from "@/components/shared/header"
 import { TabsSection } from "@/components/shared/tabs-section"
 import { Plus, Moon, Sun } from "lucide-react"
-import { getTasks, getCategories, createTask, updateTask, deleteTask } from "@/lib/actions"
+import { getTasks, getCategories, updateTask, deleteTask } from "@/lib/actions"
 
 export default function Home() {
+  const router = useRouter()
   const [tasks, setTasks] = useState<Task[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [darkMode, setDarkMode] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+
+  const handleCategorySelect = (categoryId: string | null) => {
+    setSelectedCategory(categoryId)
+  }
   const [activeTab, setActiveTab] = useState("tasks")
   const [isLoading, setIsLoading] = useState(true)
 
@@ -42,12 +48,6 @@ export default function Home() {
       document.documentElement.classList.remove("dark")
     }
   }, [darkMode])
-
-  const handleAddTask = async (data: Omit<Task, "id" | "createdAt" | "updatedAt">) => {
-    const newTask = await createTask(data)
-    setTasks([...tasks, newTask])
-    setShowForm(false)
-  }
 
   const handleUpdateTask = async (id: string, data: Partial<Task>) => {
     const updated = await updateTask(id, data)
@@ -75,7 +75,7 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent animate-spin mx-auto mb-2" />
           <p className="text-muted-foreground">Loading your tasks...</p>
         </div>
       </div>
@@ -95,7 +95,8 @@ export default function Home() {
       {/* Sidebar */}
       <Sidebar
         categories={categories}
-        onCategorySelect={setSelectedCategory}
+        tasks={tasks}
+        onCategorySelect={handleCategorySelect}
         selectedCategory={selectedCategory}
         onCategoriesChange={async () => {
           const updated = await getCategories()
@@ -112,7 +113,7 @@ export default function Home() {
           actions={
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-lg hover:bg-secondary transition-smooth text-muted-foreground hover:text-foreground"
+              className="p-2 hover:bg-secondary transition-smooth text-muted-foreground hover:text-foreground"
             >
               {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
@@ -146,37 +147,34 @@ export default function Home() {
 
       <div className="fixed bottom-8 right-8 z-50">
         <Button
-          onClick={() => {
-            setEditingTask(null)
-            setShowForm(true)
-          }}
+          onClick={() => router.push("/new")}
           size="lg"
-          className="rounded-full shadow-lg h-14 w-14 bg-primary hover:bg-primary/90"
+          className="shadow-lg h-14 w-14 bg-primary hover:bg-primary/90"
         >
           <Plus className="w-6 h-6" />
         </Button>
       </div>
 
-      {/* Task Form Dialog */}
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{editingTask ? "Edit Task" : "Create New Task"}</DialogTitle>
-            <DialogDescription>
-              {editingTask ? "Update your task details below." : "Add a new task to your list."}
-            </DialogDescription>
-          </DialogHeader>
-          <TaskForm
-            task={editingTask || undefined}
-            categories={categories}
-            onSubmit={editingTask ? (data) => handleUpdateTask(editingTask.id, data) : handleAddTask}
-            onCancel={() => {
-              setShowForm(false)
-              setEditingTask(null)
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+      {/* Task Form Dialog - Only for editing */}
+      {editingTask && (
+        <Dialog open={showForm} onOpenChange={setShowForm}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Task</DialogTitle>
+              <DialogDescription>Update your task details below.</DialogDescription>
+            </DialogHeader>
+            <TaskForm
+              task={editingTask}
+              categories={categories}
+              onSubmit={(data) => handleUpdateTask(editingTask.id, data)}
+              onCancel={() => {
+                setShowForm(false)
+                setEditingTask(null)
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }
