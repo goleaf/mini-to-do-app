@@ -173,7 +173,7 @@ This document provides a comprehensive assessment of test coverage for the Mini 
 ## Test Statistics
 
 - **Total Test Files**: 34
-- **Total Tests**: 331 (299 passing ✅, 32 failing - needs fixes)
+- **Total Tests**: 335 (308 passing ✅, 27 failing - needs fixes)
 - **Coverage Estimate**: ~78% (based on files tested)
 - **Test Framework**: Vitest v4.0.6
 - **Testing Library**: @testing-library/react v16.3.0
@@ -263,5 +263,5 @@ This document provides a comprehensive assessment of test coverage for the Mini 
 19. ✅ Add tests for `ReminderManager` component
 20. ✅ Add tests for `TaskFilters` component
 21. ✅ Add integration tests for all user flows
-22. ⚠️ Fix remaining test failures (32 tests need attention)
+22. ⚠️ Fix remaining test failures (27 tests need attention)
 
