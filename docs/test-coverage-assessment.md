@@ -55,10 +55,10 @@ This document provides a comprehensive assessment of test coverage for the Mini 
 #### Utilities (1/1 tested - 100%)
 - ✅ `lib/utils/formatting.test.ts` - Date and time formatting utilities
 
-#### Pages (0/3 tested - 0%)
+#### Pages (2/3 tested - 67%)
+- ✅ `app/new/page.test.tsx` - New task page tests (8 tests)
+- ✅ `app/categories/page.test.tsx` - Categories page tests (8 tests)
 - ❌ `app/page.tsx` - No tests
-- ❌ `app/new/page.tsx` - No tests
-- ❌ `app/categories/page.tsx` - No tests
 
 ---
 
@@ -170,9 +170,9 @@ This document provides a comprehensive assessment of test coverage for the Mini 
 
 ## Test Statistics
 
-- **Total Test Files**: 22
-- **Total Tests**: 231 (all passing ✅)
-- **Coverage Estimate**: ~60% (based on files tested)
+- **Total Test Files**: 24
+- **Total Tests**: 247 (all passing ✅)
+- **Coverage Estimate**: ~65% (based on files tested)
 - **Test Framework**: Vitest v4.0.6
 - **Testing Library**: @testing-library/react v16.3.0
 
@@ -227,8 +227,9 @@ This document provides a comprehensive assessment of test coverage for the Mini 
 12. ✅ Added tests for `SectionHeader` component
 13. ✅ Added tests for `TabsSection` component
 14. ✅ Add tests for core components (TaskListView, Sidebar)
-15. ⏳ Add integration tests for pages
-16. ⏳ Add tests for optimistic updates and rollback
+15. ✅ Add integration tests for pages (New Task, Categories)
+16. ⏳ Add tests for Home page (app/page.tsx)
+17. ⏳ Add tests for optimistic updates and rollback
 
 ---
 
