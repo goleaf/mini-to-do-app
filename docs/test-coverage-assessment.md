@@ -22,21 +22,22 @@ This document provides a comprehensive assessment of test coverage for the Mini 
 - ✅ `hooks/use-bulk-selection.test.ts` - Bulk selection management tests (NEW)
 - ✅ `hooks/use-expanded-sections.test.ts` - Expanded sections management tests (NEW)
 
-#### Components (13/25+ tested - ~52%)
+#### Components (15/25+ tested - ~60%)
 - ✅ `components/task-form.test.tsx` - Form validation and submission tests
 - ✅ `components/task-item.test.tsx` - Task item interaction tests
 - ✅ `components/shared/empty-state.test.tsx` - Empty state rendering tests
-- ✅ `components/error-boundary.test.tsx` - Error boundary tests (NEW)
-- ✅ `components/shared/loading-spinner.test.tsx` - Loading spinner tests (NEW)
-- ✅ `components/bulk-actions-bar.test.tsx` - Bulk actions bar tests (NEW)
-- ✅ `components/shared/header.test.tsx` - Page header tests (NEW)
-- ✅ `components/shared/metadata-badge.test.tsx` - Metadata badge tests (NEW)
-- ✅ `components/category-manager.test.tsx` - Category manager tests (NEW)
-- ✅ `components/quick-view.test.tsx` - Quick view dashboard tests (NEW)
-- ✅ `components/shared/section-header.test.tsx` - Section header tests (NEW)
-- ✅ `components/shared/tabs-section.test.tsx` - Tabs section tests (NEW)
-- ❌ `components/sidebar.tsx` - No tests
-- ❌ `components/task-list-view.tsx` - No tests
+- ✅ `components/error-boundary.test.tsx` - Error boundary tests
+- ✅ `components/shared/loading-spinner.test.tsx` - Loading spinner tests
+- ✅ `components/bulk-actions-bar.test.tsx` - Bulk actions bar tests
+- ✅ `components/shared/header.test.tsx` - Page header tests
+- ✅ `components/shared/metadata-badge.test.tsx` - Metadata badge tests
+- ✅ `components/category-manager.test.tsx` - Category manager tests
+- ✅ `components/quick-view.test.tsx` - Quick view dashboard tests
+- ✅ `components/shared/section-header.test.tsx` - Section header tests
+- ✅ `components/shared/tabs-section.test.tsx` - Tabs section tests
+- ✅ `components/sidebar.test.tsx` - Sidebar navigation tests
+- ✅ `components/task-list-view.test.tsx` - Task list view tests
+- ✅ `app/page.optimistic-updates.test.tsx` - Optimistic updates tests
 - ❌ `components/analytics-panel.tsx` - No tests
 - ❌ `components/pomodoro-timer.tsx` - No tests
 - ❌ `components/reminder-manager.tsx` - No tests
@@ -59,6 +60,7 @@ This document provides a comprehensive assessment of test coverage for the Mini 
 - ✅ `app/new/page.test.tsx` - New task page tests (8 tests)
 - ✅ `app/categories/page.test.tsx` - Categories page tests (8 tests)
 - ✅ `app/page.test.tsx` - Home page tests (13 tests)
+- ✅ `app/page.optimistic-updates.test.tsx` - Optimistic updates tests (18 tests)
 
 ---
 
@@ -67,19 +69,19 @@ This document provides a comprehensive assessment of test coverage for the Mini 
 ### High Priority (Critical Functionality)
 
 1. **Missing Hook Tests**
-   - `useBulkSelection` - Core functionality for bulk operations
-   - `useExpandedSections` - UI state management
+   - ~~`useBulkSelection` - Core functionality for bulk operations~~ ✅ COMPLETED
+   - ~~`useExpandedSections` - UI state management~~ ✅ COMPLETED
 
 2. **Missing Component Tests**
-   - `TaskListView` - Main task display component
-   - `BulkActionsBar` - Bulk operations UI
-   - `CategoryManager` - Category CRUD interface
-   - `Sidebar` - Core navigation component
+   - ~~`TaskListView` - Main task display component~~ ✅ COMPLETED
+   - ~~`BulkActionsBar` - Bulk operations UI~~ ✅ COMPLETED
+   - ~~`CategoryManager` - Category CRUD interface~~ ✅ COMPLETED
+   - ~~`Sidebar` - Core navigation component~~ ✅ COMPLETED
 
 3. **Missing Page Tests**
-   - Home page (`app/page.tsx`) - Main application page
-   - New task page (`app/new/page.tsx`) - Task creation flow
-   - Categories page (`app/categories/page.tsx`) - Category management
+   - ~~Home page (`app/page.tsx`) - Main application page~~ ✅ COMPLETED
+   - ~~New task page (`app/new/page.tsx`) - Task creation flow~~ ✅ COMPLETED
+   - ~~Categories page (`app/categories/page.tsx`) - Category management~~ ✅ COMPLETED
 
 ### Medium Priority (Important Features)
 
