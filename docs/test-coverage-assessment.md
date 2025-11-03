@@ -170,9 +170,9 @@ This document provides a comprehensive assessment of test coverage for the Mini 
 
 ## Test Statistics
 
-- **Total Test Files**: 25
-- **Total Tests**: 260 (all passing ✅)
-- **Coverage Estimate**: ~70% (based on files tested)
+- **Total Test Files**: 26
+- **Total Tests**: 278 (all passing ✅)
+- **Coverage Estimate**: ~72% (based on files tested)
 - **Test Framework**: Vitest v4.0.6
 - **Testing Library**: @testing-library/react v16.3.0
 
@@ -228,7 +228,7 @@ This document provides a comprehensive assessment of test coverage for the Mini 
 13. ✅ Added tests for `TabsSection` component
 14. ✅ Add tests for core components (TaskListView, Sidebar)
 15. ✅ Add integration tests for pages (New Task, Categories, Home)
-16. ⏳ Add tests for optimistic updates and rollback
+16. ✅ Add tests for optimistic updates and rollback
 
 ---
 
